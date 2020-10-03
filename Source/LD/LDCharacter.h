@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include <LD/Projectile.h>
 #include "LDCharacter.generated.h"
 
 UCLASS(config=Game)
@@ -18,6 +19,8 @@ class ALDCharacter : public ACharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
+
+	class AAsteroid* asteroidInRange;
 public:
 	ALDCharacter();
 
@@ -28,6 +31,14 @@ public:
 	/** Base look up/down rate, in deg/sec. Other scaling may affect final rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseLookUpRate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
+	class AProjectile* projectile;
+
+	void BeginPlay();
+
+	UFUNCTION()
+	void OnFirePressed();
 
 protected:
 
@@ -63,10 +74,21 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	// End of APawn interface
 
+private:
+    float asteroidAngle;
+
+	void ComputeAngle();
 public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+    // Called every frame
+    virtual void Tick(float DeltaTime) override;
+
+
+	UFUNCTION()
+	void OnCollision(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 };
 

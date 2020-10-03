@@ -8,6 +8,9 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include <LD\Asteroid.h>
+#include "Kismet/KismetMathLibrary.h"
+#include <Containers\UnrealString.h>
 
 //////////////////////////////////////////////////////////////////////////
 // ALDCharacter
@@ -45,6 +48,8 @@ ALDCharacter::ALDCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
+
+	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ALDCharacter::OnCollision);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -52,10 +57,13 @@ ALDCharacter::ALDCharacter()
 
 void ALDCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
+	GLog->Log("Test");
 	// Set up gameplay key bindings
 	check(PlayerInputComponent);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ALDCharacter::OnFirePressed);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ALDCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ALDCharacter::MoveRight);
@@ -76,6 +84,30 @@ void ALDCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputC
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &ALDCharacter::OnResetVR);
 }
 
+void ALDCharacter::ComputeAngle()
+{
+	FVector position = GetActorLocation() - asteroidInRange->GetActorLocation();
+	position.Normalize();
+
+	asteroidAngle = FMath::RadiansToDegrees(FMath::Acos(position.X));
+
+	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, FString::Printf(TEXT("Angle  %f"), asteroidAngle));
+}
+
+
+void ALDCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	
+}
+
+void ALDCharacter::OnFirePressed()
+{
+	auto proj = NewObject<AProjectile>();
+
+
+}
 
 void ALDCharacter::OnResetVR()
 {
@@ -130,5 +162,39 @@ void ALDCharacter::MoveRight(float Value)
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		// add movement in that direction
 		AddMovementInput(Direction, Value);
+	}
+}
+
+void ALDCharacter::Tick(float delta)
+{
+	Super::Tick(delta);
+
+    if(asteroidInRange)
+    {
+		asteroidAngle = (asteroidAngle + delta);
+		FVector pos;
+
+		pos.X = FMath::Cos(asteroidAngle + 180);
+		pos.Y = FMath::Sin(asteroidAngle + 180);
+
+		pos *= 100.0f;
+
+		//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, FString::Printf(TEXT("Pos %f, %f"), pos.X, pos.Y));
+
+		SetActorLocation(asteroidInRange->GetActorLocation() + pos, false, nullptr, ETeleportType::TeleportPhysics);
+    }
+}
+
+void ALDCharacter::OnCollision(UPrimitiveComponent* OverlappedComp,
+	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Asteroid in range !"));
+
+	asteroidInRange = Cast<AAsteroid>(OtherActor);
+
+	if (asteroidInRange)
+	{
+		ComputeAngle();
+		GetMesh()->SetPhysicsLinearVelocity(FVector::ZeroVector);
 	}
 }
