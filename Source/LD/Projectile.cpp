@@ -4,6 +4,7 @@
 #include "Projectile.h"
 #include <LD\Asteroid.h>
 #include <LD\LDCharacter.h>
+#include "Components\StaticMeshComponent.h"
 
 // Sets default values
 AProjectile::AProjectile()
@@ -21,6 +22,8 @@ void AProjectile::BeginPlay()
 	Super::BeginPlay();
 
 	SetLifeSpan(10.0f);
+
+	mesh = (UStaticMeshComponent*)GetComponentByClass(UStaticMeshComponent::StaticClass());
 
 	sphereCollider->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnCollision);
 }

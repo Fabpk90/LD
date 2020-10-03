@@ -26,9 +26,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AsteroidConfig)
 	class USphereComponent* collisionSphere;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UStaticMeshComponent* mesh;
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

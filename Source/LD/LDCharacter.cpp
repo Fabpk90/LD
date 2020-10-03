@@ -104,9 +104,15 @@ void ALDCharacter::BeginPlay()
 
 void ALDCharacter::OnFirePressed()
 {
+
+	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("YOO"));
+
 	auto proj = NewObject<AProjectile>();
 
+	auto forward = GetCameraBoom()->GetForwardVector();
 
+	//TODO: fix me, crashing on null
+	proj->mesh->SetPhysicsLinearVelocity(forward * 10.0f);
 }
 
 void ALDCharacter::OnResetVR()

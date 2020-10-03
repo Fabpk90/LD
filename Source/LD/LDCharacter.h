@@ -33,7 +33,7 @@ public:
 	float BaseLookUpRate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
-	class AProjectile* projectile;
+	class TSubclassOf<AProjectile> projectile;
 
 	void BeginPlay();
 
