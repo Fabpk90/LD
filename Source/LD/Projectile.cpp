@@ -9,10 +9,11 @@
 // Sets default values
 AProjectile::AProjectile()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
+	
+	SetRootComponent(mesh);
 
-	sphereCollider = CreateDefaultSubobject<USphereComponent>(TEXT("SphereCollider"));
+	mesh->SetSimulatePhysics(true);
 
 }
 
@@ -23,22 +24,15 @@ void AProjectile::BeginPlay()
 
 	SetLifeSpan(10.0f);
 
-	mesh = (UStaticMeshComponent*)GetComponentByClass(UStaticMeshComponent::StaticClass());
-
-	sphereCollider->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnCollision);
-}
-
-// Called every frame
-void AProjectile::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
+	mesh->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::OnCollision);
 }
 
 void AProjectile::OnCollision(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	SetLifeSpan(0.0f);
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("AAAAAH!"));
 
 	if (OtherActor->IsA<AAsteroid>())
 	{
@@ -49,7 +43,9 @@ void AProjectile::OnCollision(UPrimitiveComponent* OverlappedComp, AActor* Other
 		FVector direction = character->GetActorLocation() - asteroid->GetActorLocation();
 		direction.Normalize();
 
-		character->GetMesh()->SetPhysicsLinearVelocity(FVector(1, 1, 0) * direction * 10.0f);
+		character->GetMesh()->AddImpulse(FVector(1, 1, 0) * direction * 1000.0f);
+
+		asteroid->OnExploding();
 	}
 }
 

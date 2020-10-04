@@ -37,8 +37,10 @@ public:
 
 	void BeginPlay();
 
-	UFUNCTION()
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = GameplayTest)
 	void OnFirePressed();
+
+	void OnFirePressed_Implementation();
 
 protected:
 

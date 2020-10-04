@@ -26,6 +26,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AsteroidConfig)
 	class USphereComponent* collisionSphere;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AsteroidConfig)
+	class UParticleSystemComponent* particleSystem;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -33,5 +36,8 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+
+	void OnExploding();
 
 };

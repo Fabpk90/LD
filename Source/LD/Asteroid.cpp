@@ -2,6 +2,7 @@
 
 
 #include "Asteroid.h"
+#include <Particles\ParticleSystemComponent.h>
 
 // Sets default values
 AAsteroid::AAsteroid()
@@ -11,6 +12,10 @@ AAsteroid::AAsteroid()
 	collisionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("SphereCollider"));
 	collisionSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	collisionSphere->SetSphereRadius(radius);
+
+	SetRootComponent(collisionSphere);
+
+	particleSystem = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Particles"));
 }
 
 // Called when the game starts or when spawned
@@ -23,5 +28,13 @@ void AAsteroid::BeginPlay()
 void AAsteroid::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+void AAsteroid::OnExploding()
+{
+	particleSystem->SetVisibility(true);
+	particleSystem->Activate(true);
+
+	SetLifeSpan(.5f);
 }
 

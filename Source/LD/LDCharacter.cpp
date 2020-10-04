@@ -57,13 +57,10 @@ ALDCharacter::ALDCharacter()
 
 void ALDCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
-	GLog->Log("Test");
 	// Set up gameplay key bindings
 	check(PlayerInputComponent);
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
-	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ALDCharacter::OnFirePressed);
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ALDCharacter::OnFirePressed_Implementation);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ALDCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ALDCharacter::MoveRight);
@@ -102,17 +99,27 @@ void ALDCharacter::BeginPlay()
 	
 }
 
-void ALDCharacter::OnFirePressed()
+void ALDCharacter::OnFirePressed_Implementation()
 {
-
-	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("YOO"));
-
-	auto proj = NewObject<AProjectile>();
-
 	auto forward = GetCameraBoom()->GetForwardVector();
 
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Eh %f %f %f!"), forward.X, forward.Y, forward.Z));
+
+	auto proj = GetWorld()->SpawnActor<AProjectile>(projectile, GetActorLocation() + forward * 200.0f, FRotator::ZeroRotator);
+	auto pos = proj->GetActorLocation();
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Eh %f %f %f!"), pos.X, pos.Y, pos.Z));
+
+
 	//TODO: fix me, crashing on null
-	proj->mesh->SetPhysicsLinearVelocity(forward * 10.0f);
+	UStaticMeshComponent* comp = (UStaticMeshComponent*)proj->GetComponentByClass(UStaticMeshComponent::StaticClass());
+	if (comp)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("HO !"));
+		comp->AddImpulse(forward * 10000.0f);
+	}
+	else
+		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, TEXT("nope !"));
 }
 
 void ALDCharacter::OnResetVR()
@@ -187,19 +194,19 @@ void ALDCharacter::Tick(float delta)
 
 		//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, FString::Printf(TEXT("Pos %f, %f"), pos.X, pos.Y));
 
-		SetActorLocation(asteroidInRange->GetActorLocation() + pos, false, nullptr, ETeleportType::TeleportPhysics);
+		SetActorLocation(asteroidInRange->GetActorLocation() + pos, false, nullptr, ETeleportType::ResetPhysics);
     }
 }
 
 void ALDCharacter::OnCollision(UPrimitiveComponent* OverlappedComp,
 	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Asteroid in range !"));
 
 	asteroidInRange = Cast<AAsteroid>(OtherActor);
 
 	if (asteroidInRange)
 	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Asteroid in range !"));
 		ComputeAngle();
 		GetMesh()->SetPhysicsLinearVelocity(FVector::ZeroVector);
 	}
